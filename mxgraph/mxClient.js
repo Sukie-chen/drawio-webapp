@@ -52,13 +52,13 @@ var mxClient = {
       0 > navigator.userAgent.indexOf("SeaMonkey/1.")) ||
     (0 <= navigator.userAgent.indexOf("Iceape/") &&
       0 > navigator.userAgent.indexOf("Iceape/1.")),
-  IS_VML: "MICROSOFT INTERNET EXPLORER" == navigator.appName.toUpperCase(),
+  IS_VML: "MICROSOFT INTERNET EXPLORER" == navigator.appName.toUpperCase(), //浏览器的名称 The value of the Navigator.appName property is always "Netscape", in any browser. 
   IS_SVG: "MICROSOFT INTERNET EXPLORER" != navigator.appName.toUpperCase(),
   NO_FO:
     !document.createElementNS ||
     "[object SVGForeignObjectElement]" !=
       document.createElementNS("http://www.w3.org/2000/svg", "foreignObject") ||
-    0 <= navigator.userAgent.indexOf("Opera/"),
+    0 <= navigator.userAgent.indexOf("Opera/"), //createElementNS---创建一个具有指定的命名空间 URI 和限定名称的元素(namespaceURI, qualifiedName[, options])
   IS_WIN: 0 < navigator.appVersion.indexOf("Win"),
   IS_MAC: 0 < navigator.appVersion.indexOf("Mac"),
   IS_CHROMEOS: /\bCrOS\b/.test(navigator.appVersion),
@@ -67,12 +67,14 @@ var mxClient = {
     null != window.PointerEvent && !(0 < navigator.appVersion.indexOf("Mac")),
   IS_LOCAL:
     0 > document.location.href.indexOf("http://") &&
-    0 > document.location.href.indexOf("https://"),
+    0 > document.location.href.indexOf("https://"), //找不到http和https及算是local
   defaultBundles: [],
   isBrowserSupported: function () {
+     // 是否支持 VML（矢量标记语言，只有ie5.0或者更高版本支持） 或 SVG
     return mxClient.IS_VML || mxClient.IS_SVG;
   },
   link: function (a, b, c, d) {
+    // 创建外部资源链接元素 type="text/css"
     c = c || document;
     if (mxClient.IS_IE6)
       c.write(
@@ -84,16 +86,19 @@ var mxClient = {
       );
     else {
       var e = c.createElement("link");
-      e.setAttribute("rel", a);
-      e.setAttribute("href", b);
-      e.setAttribute("charset", "UTF-8");
-      e.setAttribute("type", "text/css");
-      d && e.setAttribute("id", d);
-      c.getElementsByTagName("head")[0].appendChild(e);
+        e.setAttribute("rel", a); //rel规定当前文档与被链接文档之间的关系  rel="stylesheet"---指示被链接的文档是一个样式表 
+        e.setAttribute("href", b); //文档地址
+        e.setAttribute("charset", "UTF-8");
+        e.setAttribute("type", "text/css");
+        // 如果d参数存在，则为创建的link标签添加id属性，设置为d
+        d && e.setAttribute("id", d);
+        // 将link标签插入head标签中
+        c.getElementsByTagName("head")[0].appendChild(e);
     }
   },
   loadResources: function (a, b) {
     function c() {
+      // (当前d==1)d-1之后=0，则执行a
       0 == --d && a();
     }
     for (
@@ -101,9 +106,11 @@ var mxClient = {
       e < mxClient.defaultBundles.length;
       e++
     )
+    // 读取mxClient.defaultBundles数组最后一个元素，添加至mxResources
       mxResources.add(mxClient.defaultBundles[e], b, c);
   },
   include: function (a) {
+    // 添加 src=a的script标签
     document.write('<script src="' + a + '">\x3c/script>');
   },
 };
@@ -192,6 +199,10 @@ mxClient.IS_VML &&
             "\\:*{behavior:url(#default#VML)}"),
       mxLoadStylesheets &&
         mxClient.link("stylesheet", mxClient.basePath + "/css/explorer.css")));
+/**
+ * ????
+ * 
+ */
 var mxLog = {
     consoleName: "Console",
     TRACE: !1,
@@ -310,7 +321,7 @@ var mxLog = {
       return null != mxLog.window ? mxLog.window.isVisible() : !1;
     },
     show: function () {
-      mxLog.setVisible(!0);
+      mxLog.setVisible(!0); // true
     },
     setVisible: function (a) {
       null == mxLog.window && mxLog.init();
@@ -354,6 +365,11 @@ var mxLog = {
     FIELD_NAME: "mxObjectId",
     counter: 0,
     get: function (a) {
+      /**  a 为 null 返回null
+       * a[mxObjectIdentity.FIELD_NAME] 不为null 则返回该值
+       * a[mxObjectIdentity.FIELD_NAME] 为null 判断a是否是object 赋值再返回该值
+       * string 类型
+       */
       if (null != a) {
         if (null == a[mxObjectIdentity.FIELD_NAME])
           if ("object" === typeof a) {
@@ -373,18 +389,23 @@ var mxLog = {
         delete a[mxObjectIdentity.FIELD_NAME];
     },
   };
+  /** 这又是干啥的？
+   * mxDictionary map clear() get() put() remove() getKeys() getValues() visit()
+   */
 function mxDictionary() {
   this.clear();
 }
-mxDictionary.prototype.map = null;
+mxDictionary.prototype.map = null; // null / {}
 mxDictionary.prototype.clear = function () {
   this.map = {};
 };
 mxDictionary.prototype.get = function (a) {
   a = mxObjectIdentity.get(a);
+  // a 赋值了一个string | null，相当于是个key ---this.map[null] === undefined
   return this.map[a];
 };
 mxDictionary.prototype.put = function (a, b) {
+  /** 我敲，有点意思  赋值操作*/
   var c = mxObjectIdentity.get(a),
     d = this.map[c];
   this.map[c] = b;
@@ -400,15 +421,16 @@ mxDictionary.prototype.getKeys = function () {
   var a = [],
     b;
   for (b in this.map) a.push(b);
-  return a;
+  return a; // 返回keys的数组
 };
 mxDictionary.prototype.getValues = function () {
   var a = [],
     b;
   for (b in this.map) a.push(this.map[b]);
-  return a;
+  return a;// 返回values的数组
 };
 mxDictionary.prototype.visit = function (a) {
+  // a(key, value)
   for (var b in this.map) a(b, this.map[b]);
 };
 var mxResources = {
@@ -549,13 +571,13 @@ mxPoint.prototype.clone = function () {
 };
 function mxRectangle(a, b, c, d) {
   mxPoint.call(this, a, b);
-  this.width = null != c ? c : 0;
-  this.height = null != d ? d : 0;
+  this.width = null != c ? c : 0; // c 为width
+  this.height = null != d ? d : 0;// d 为height
 }
 mxRectangle.prototype = new mxPoint();
 mxRectangle.prototype.constructor = mxRectangle;
 mxRectangle.prototype.width = null;
-mxRectangle.prototype.height = null;
+mxRectangle.prototype.height = null; // 初始值为null
 mxRectangle.prototype.setRect = function (a, b, c, d) {
   this.x = a;
   this.y = b;
@@ -702,6 +724,7 @@ var mxEffects = {
     errorResource: "none" != mxClient.language ? "error" : "",
     closeResource: "none" != mxClient.language ? "close" : "",
     errorImage: mxClient.imageBasePath + "/error.gif",
+    // a的所有子元素的style.cursor都清除
     removeCursors: function (a) {
       null != a.style && (a.style.cursor = "");
       a = a.childNodes;
@@ -709,6 +732,7 @@ var mxEffects = {
         for (var b = a.length, c = 0; c < b; c += 1)
           mxUtils.removeCursors(a[c]);
     },
+    // a.currentStyle | window.getComputedStyle(a, "") | null
     getCurrentStyle: (function () {
       return mxClient.IS_IE &&
         (null == document.documentMode || 9 > document.documentMode)
@@ -2720,6 +2744,8 @@ mxEventSource.prototype.fireEvent = function (a, b) {
 };
 var mxEvent = {
   addListener: (function () {
+    // a 元素绑定事件b,事件回调为c， useCapture 为 false 
+    // 并在a元素上绑定mxListenerList属性，记录所有的事件
     return window.addEventListener
       ? function (a, b, c) {
           a.addEventListener(b, c, !1);
@@ -2763,6 +2789,7 @@ var mxEvent = {
       }
   },
   addGestureListeners: function (a, b, c, d) {
+    // a元素添加指定事件， 回调函数为对应的b,c,d
     null != b &&
       mxEvent.addListener(
         a,
@@ -3251,6 +3278,8 @@ var mxClipboard = {
     return b;
   },
 };
+
+// 缩略框
 function mxWindow(a, b, c, d, e, f, g, k, l, m) {
   null != b &&
     ((g = null != g ? g : !0),
@@ -3268,26 +3297,33 @@ function mxWindow(a, b, c, d, e, f, g, k, l, m) {
 }
 mxWindow.prototype = new mxEventSource();
 mxWindow.prototype.constructor = mxWindow;
-mxWindow.prototype.closeImage = mxClient.imageBasePath + "/close.gif";
-mxWindow.prototype.minimizeImage = mxClient.imageBasePath + "/minimize.gif";
-mxWindow.prototype.normalizeImage = mxClient.imageBasePath + "/normalize.gif";
-mxWindow.prototype.maximizeImage = mxClient.imageBasePath + "/maximize.gif";
-mxWindow.prototype.resizeImage = mxClient.imageBasePath + "/resize.gif";
-mxWindow.prototype.visible = !1;
-mxWindow.prototype.minimumSize = new mxRectangle(0, 0, 50, 40);
-mxWindow.prototype.destroyOnClose = !0;
+mxWindow.prototype.closeImage = mxClient.imageBasePath + "/close.gif"; // 关闭缩略框的gif
+mxWindow.prototype.minimizeImage = mxClient.imageBasePath + "/minimize.gif"; // 最小化缩略框的gif
+mxWindow.prototype.normalizeImage = mxClient.imageBasePath + "/normalize.gif"; // 正常展开缩略框的gif
+mxWindow.prototype.maximizeImage = mxClient.imageBasePath + "/maximize.gif"; // 最大化缩略框的gif
+mxWindow.prototype.resizeImage = mxClient.imageBasePath + "/resize.gif"; // 改变缩略框大小的gif
+mxWindow.prototype.visible = !1; // 初始值为false
+mxWindow.prototype.minimumSize = new mxRectangle(0, 0, 50, 40); // minimumSize
+mxWindow.prototype.destroyOnClose = !0; //  true 在关闭时销毁
 mxWindow.prototype.contentHeightCorrection =
   8 == document.documentMode || 7 == document.documentMode ? 6 : 2;
 mxWindow.prototype.title = null;
 mxWindow.prototype.content = null;
 mxWindow.prototype.init = function (a, b, c, d, e) {
-  e = null != e ? e : "mxWindow";
+  // 初始化缩略框--在html中插入对应元素 div.mxWindow
+  e = null != e ? e : "mxWindow"; // e有传参则使用传参，否则赋值'mxWindow'
   this.div = document.createElement("div");
   this.div.className = e;
+  // position absolute --- 设置left 和 top 值
   this.div.style.left = a + "px";
   this.div.style.top = b + "px";
+  // table.mxWindow
   this.table = document.createElement("table");
   this.table.className = e;
+  /**
+   * IS_POINTER--- window.PointerEvent存在且不是mac系统
+   * touch-action 用于设置触摸屏用户如何操纵元素的区域 
+   */
   mxClient.IS_POINTER && (this.div.style.touchAction = "none");
   null != c &&
     (mxClient.IS_QUIRKS || (this.div.style.width = c + "px"),
@@ -3297,8 +3333,10 @@ mxWindow.prototype.init = function (a, b, c, d, e) {
     (this.table.style.height = d + "px"));
   a = document.createElement("tbody");
   b = document.createElement("tr");
+  // td.mxWindowTitle
   this.title = document.createElement("td");
   this.title.className = e + "Title";
+  // 操作按钮--- 关闭 最小化，正常展开等
   this.buttons = document.createElement("div");
   this.buttons.style.position = "absolute";
   this.buttons.style.display = "inline-block";
@@ -3307,14 +3345,15 @@ mxWindow.prototype.init = function (a, b, c, d, e) {
   this.title.appendChild(this.buttons);
   b.appendChild(this.title);
   a.appendChild(b);
+  // 缩略框的画布部分 td.mxWindowPane
   b = document.createElement("tr");
   this.td = document.createElement("td");
   this.td.className = e + "Pane";
   7 == document.documentMode && (this.td.style.height = "100%");
   this.contentWrapper = document.createElement("div");
   this.contentWrapper.className = e + "Pane";
-  this.contentWrapper.style.width = "100%";
-  this.contentWrapper.appendChild(this.content);
+  this.contentWrapper.style.width = "100%";// div.mxWindowPane
+  this.contentWrapper.appendChild(this.content); //div.(geDiagramContainer geDiagramBackdrop)
   if (mxClient.IS_QUIRKS || "DIV" != this.content.nodeName.toUpperCase())
     this.contentWrapper.style.height = "100%";
   this.td.appendChild(this.contentWrapper);
@@ -3322,9 +3361,19 @@ mxWindow.prototype.init = function (a, b, c, d, e) {
   a.appendChild(b);
   this.table.appendChild(a);
   this.div.appendChild(this.table);
+  // 以上创建元素完成
+  /**
+   * const fun = function (a) {
+      this.activate();
+    }
+   * e = fun.apply(this, argument)
+    在其他函数内执行e ，则同等与mxWindow.activate
+   */
   e = mxUtils.bind(this, function (a) {
     this.activate();
   });
+  // 给 this.title 和 this.table 元素绑定了pointerdown|mousedown事件，回调执行activate
+  // pointerdown 除了包含 mousedown 事件，还有 笔和触摸的物理接触
   mxEvent.addGestureListeners(this.title, e);
   mxEvent.addGestureListeners(this.table, e);
   this.hide();
@@ -3332,13 +3381,22 @@ mxWindow.prototype.init = function (a, b, c, d, e) {
 mxWindow.prototype.setTitle = function (a) {
   for (var b = this.title.firstChild; null != b; ) {
     var c = b.nextSibling;
+    /**
+     *  如果节点是元素节点，则 nodeType 属性将返回 1。
+        如果节点是属性节点，则 nodeType 属性将返回 2。
+        如果节点是文本节点，则 nodeType 属性将返回 3。
+        如果节点是注释节点，则 nodeType 属性将返回 8。
+     */
+    // 如果b是文本节点，则删除该节点
     b.nodeType == mxConstants.NODETYPE_TEXT && b.parentNode.removeChild(b);
     b = c;
   }
+  // this.title设置文本节点createTextNode（a || ""）--- 先删除再添加
   mxUtils.write(this.title, a || "");
-  this.title.appendChild(this.buttons);
+  this.title.appendChild(this.buttons);// 为什么要append两次（这是第二次）
 };
 mxWindow.prototype.setScrollable = function (a) {
+  // 设置div(geDiagramContainer geDiagramBackdrop)的overflow样式
   if (
     null == navigator.userAgent ||
     0 > navigator.userAgent.indexOf("Presto/2.5")
@@ -3347,6 +3405,7 @@ mxWindow.prototype.setScrollable = function (a) {
 };
 mxWindow.prototype.activate = function () {
   if (mxWindow.activeWindow != this) {
+    // div.mxWindow.currentStyle
     var a = mxUtils.getCurrentStyle(this.getElement()),
       a = null != a ? a.zIndex : 3;
     if (mxWindow.activeWindow) {
@@ -3355,11 +3414,13 @@ mxWindow.prototype.activate = function () {
     }
     b = mxWindow.activeWindow;
     this.getElement().style.zIndex = parseInt(a) + 1;
+    // 设置z-index
     mxWindow.activeWindow = this;
     this.fireEvent(new mxEventObject(mxEvent.ACTIVATE, "previousWindow", b));
   }
 };
 mxWindow.prototype.getElement = function () {
+  // div.mxWindow大盒子
   return this.div;
 };
 mxWindow.prototype.fit = function () {
@@ -3934,6 +3995,7 @@ mxDragSource.prototype.graphContainsEvent = function (a, b) {
   );
 };
 mxDragSource.prototype.mouseMove = function (a) {
+  console.log('mouseMove');
   var b = this.getGraphForEvent(a);
   null == b || this.graphContainsEvent(b, a) || (b = null);
   b != this.currentGraph &&
