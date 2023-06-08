@@ -720,6 +720,7 @@ var mxEffects = {
           c && a.parentNode && a.parentNode.removeChild(a);
     },
   },
+
   mxUtils = {
     errorResource: "none" != mxClient.language ? "error" : "",
     closeResource: "none" != mxClient.language ? "close" : "",
@@ -3000,7 +3001,10 @@ var mxEvent = {
     return mxEvent.getMainEvent(a).clientY;
   },
   consume: function (a, b, c) {
+    // c = c | true
     c = null != c ? c : !0;
+    // null != b ? b : 1 不是永为 true 吗？？
+    // (在js解析中 函数形参是否存在判断： null != b)
     if (null != b ? b : 1)
       a.preventDefault
         ? (c && a.stopPropagation(), a.preventDefault())
@@ -3804,6 +3808,7 @@ function mxImage(a, b, c) {
 mxImage.prototype.src = null;
 mxImage.prototype.width = null;
 mxImage.prototype.height = null;
+// 缩略图的拖动大小设置
 function mxDivResizer(a, b) {
   if ("div" == a.nodeName.toLowerCase()) {
     null == b && (b = window);
@@ -3856,24 +3861,33 @@ mxDivResizer.prototype.getDocumentWidth = function () {
 mxDivResizer.prototype.getDocumentHeight = function () {
   return document.body.clientHeight;
 };
+/**
+ * 
+ * 
+ * 
+ */
 function mxDragSource(a, b) {
   this.element = a;
   this.dropHandler = b;
+  // a 元素绑定 mouseDown 事件，回调函数是该方法的mouseDown()
   mxEvent.addGestureListeners(
     a,
     mxUtils.bind(this, function (a) {
       this.mouseDown(a);
     })
   );
+  // dragstart----开始拖动元素或被选择的文本
   mxEvent.addListener(a, "dragstart", function (a) {
     mxEvent.consume(a);
   });
+  // 传参进去的 b['eventName'] 不是 'mouseDown' 事件则执行b['event'].consume()
   this.eventConsumer = function (a, b) {
     var c = b.getProperty("eventName"),
       d = b.getProperty("event");
     c != mxEvent.MOUSE_DOWN && d.consume();
   };
 }
+// mxDragSource 初始化 null | false | 初始样式值
 mxDragSource.prototype.element = null;
 mxDragSource.prototype.dropHandler = null;
 mxDragSource.prototype.dragOffset = null;
@@ -3892,6 +3906,7 @@ mxDragSource.prototype.highlightDropTargets = !0;
 mxDragSource.prototype.dragElementZIndex = 100;
 mxDragSource.prototype.dragElementOpacity = 70;
 mxDragSource.prototype.checkEventSource = !0;
+
 mxDragSource.prototype.isEnabled = function () {
   return this.enabled;
 };
@@ -3926,6 +3941,7 @@ mxDragSource.prototype.isActive = function () {
   return null != this.mouseMoveHandler;
 };
 mxDragSource.prototype.reset = function () {
+  // this.currentGraph
   null != this.currentGraph &&
     (this.dragExit(this.currentGraph), (this.currentGraph = null));
   this.removeDragElement();
@@ -3933,6 +3949,7 @@ mxDragSource.prototype.reset = function () {
   this.stopDrag();
 };
 mxDragSource.prototype.mouseDown = function (a) {
+  // 绑定事件，回调bind-- this.mouseMoveHandler this.mouseUpHandler
   this.enabled &&
     !mxEvent.isConsumed(a) &&
     null == this.mouseMoveHandler &&
@@ -3995,7 +4012,6 @@ mxDragSource.prototype.graphContainsEvent = function (a, b) {
   );
 };
 mxDragSource.prototype.mouseMove = function (a) {
-  console.log('mouseMove');
   var b = this.getGraphForEvent(a);
   null == b || this.graphContainsEvent(b, a) || (b = null);
   b != this.currentGraph &&
